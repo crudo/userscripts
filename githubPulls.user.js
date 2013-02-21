@@ -37,6 +37,7 @@ for (var i=0; i < issues_uris.length; i++) {
                 var isFailure = html.match('status-failure js-branch-status');
                 var isTesting = html.match('Determining merge status');
 
+                // FIXME: this is not nice 
                 var targetMaster = html.match(/git checkout (master)/);
                 var targetStable = html.match(/git checkout (stable-\d+)/);
                 // console.log('for ', urn, targetMaster, targetStable);
