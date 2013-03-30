@@ -2,8 +2,8 @@
 // @name           Pull requests beautifier
 // @description    A brief description of your script
 // @author         crudo
-// @include        https://github.com/gooddata/gdc-client/pulls
-// @version        1.0
+// @include        https://github.com/gooddata/*/pulls
+// @version        1.2
 // ==/UserScript==
 
 var issue_links = document.getElementsByClassName("js-navigation-open");
@@ -13,11 +13,21 @@ for (var i=0; i < issue_links.length; i++) {
     issues_parents.push(issue_links[i].parentElement);
 };
 
-var styles = "font-size: 10px; padding: 1px 3px; position: relative; top: 8px; font-weight: bold; color: white; float: left; margin-right: 7px; border-radius: 3px; background: ";
-var statusOK = '<span class="mini-icon mini-icon-confirm" style="'+styles+' transparent; color: #090; font-size: 15px;"></span>';
-var statusFAIL = '<span style="'+styles+'#a10;">FAIL</span>';
-var statusTEST = '<span style="'+styles+' #fc3; color: black;">???</span>';
-var targetBase = '<span style="'+styles+' #transparent; color: #666; font-weight: normal;">';
+GM_addStyle(
+    ".info-base { font-size: 10px; padding: 1px 3px; position: relative; top: 8px; font-weight: bold; color: white; float: left; margin-right: 7px; border-radius: 3px; } "+
+    ".info-status-success { color: #090; font-size: 15px; }"+
+    ".info-status-error { background: #a10; }"+
+    ".info-status-unknow { background: #fc3; color: black; }"+
+    ".info-branch { color: #666; font-weight: normal; }"+
+    ".info-pullId { color: #e5e5e5; font-weight: normal; right: 10px; font-size: 26px; position: absolute; }");
+
+var s = '<span class="info-base ';
+
+var statusOK     = s + 'info-status-success mini-icon mini-icon-confirm"></span>';
+var statusFAIL   = s + 'info-status-error">FAIL</span>';
+var statusTEST   = s + 'info-status-unknow">???</span>';
+var branch_start = s + 'info-branch">';
+var pull_id      = s + 'info-pullId">';
 
 for (var i=0; i < issues_uris.length; i++) {
     var uri = issues_uris[i];
@@ -30,43 +40,39 @@ for (var i=0; i < issues_uris.length; i++) {
                 var html = response.responseText;
                 var buffer = "";
 
-        		var doc = document.implementation.createHTMLDocument("");
-        		doc.body.innerHTML = html;
-        		var assigneeNode = doc.getElementsByClassName("js-assignee-infobar-item-wrapper")[0];
-        		var assigneeAnchors = assigneeNode.getElementsByTagName("a");
-        		var assigneeName = assigneeAnchors && assigneeAnchors[0] && assigneeAnchors[0].innerHTML;
+                var doc = document.implementation.createHTMLDocument("");
+                doc.body.innerHTML = html;
+                var assigneeNode = doc.getElementsByClassName("js-assignee-infobar-item-wrapper")[0];
+                var assigneeAnchs = assigneeNode.getElementsByTagName("a");
+                var assigneeName = assigneeAnchs && assigneeAnchs[0] && assigneeAnchs[0].innerHTML;
 
-        		var userAnchors = doc.getElementById("user-links").getElementsByTagName("a");
-        		var userName = userAnchors && userAnchors[0] && userAnchors[0].href.match(/\.com\/(.+)/)[1];
-        		var pullItemNode = node.parentElement;
+                var userAnchs = doc.getElementById("user-links").getElementsByTagName("a");
+                var userName = userAnchs && userAnchs[0] && userAnchs[0].href.match(/\.com\/(.+)/)[1];
+                var pullItemNode = node.parentElement;
 
+                if (!assigneeName) pullItemNode.style.backgroundColor="rgba(255, 0, 0, 0.05)";
+                if (assigneeName == userName) pullItemNode.style.backgroundColor="rgba(0, 255, 0, 0.1)";
 
-        		if (!assigneeName) pullItemNode.style.backgroundColor="rgba(255, 0, 0, 0.1)";
-        		if (assigneeName == userName) pullItemNode.style.backgroundColor="rgba(0, 255, 0, 0.1)";
-
-        //		console.log("assignee: ", assigneeName || '-', userName);
-        //		console.log("--------------------------------------------------------------------");
-
-                var isClosed = html.match('state-indicator closed');
+                var isClosed  = html.match('state-indicator closed');
                 var isSuccess = html.match('status-success js-branch-status');
                 var isFailure = html.match('status-failure js-branch-status');
                 var isTesting = html.match('Determining merge status');
 
                 // can not determine status on closed issues
-                if(isClosed) return;
+                if (isClosed) return;
 
                 var targetMaster = html.match(/git checkout (master)/);
                 var targetStable = html.match(/git checkout (stable-\d+)/);
 
-                if(targetMaster !== null) buffer += targetBase + 'master</span>';
-                if(targetStable !== null) buffer += targetBase + targetStable[1] + '</span>';
+                if (targetMaster !== null) buffer += branch_start + 'master</span>';
+                if (targetStable !== null) buffer += branch_start + targetStable[1] + '</span>';
 
-                buffer += targetBase + urn.match(/\/(\d+)/)[1] + '</span>';
+                buffer += pull_id + urn.match(/\/(\d+)/)[1] + '</span>';
 
-                var metaNode = node.parentElement.getElementsByClassName("meta")[0];
+                var metaNode = pullItemNode.getElementsByClassName("meta")[0];
                 var span = metaNode.parentElement.insertBefore(document.createElement('SPAN'), metaNode);
 
-                if(isTesting) {
+                if (isTesting) {
                     span.outerHTML = statusTEST;
                     return;
                 }
