@@ -3,7 +3,7 @@
 // @description    A brief description of your script
 // @author         crudo
 // @include        https://github.com/gooddata/*/pulls
-// @version        1.5
+// @version        1.6
 // ==/UserScript==
 
 var issue_links = document.getElementsByClassName("js-navigation-open");
@@ -60,8 +60,8 @@ for (var i=0; i < issues_uris.length; i++) {
                 var pullItemNode = node.parentElement;
 
                 var isClosed  = html.match('state-indicator closed');
-                var isSuccess = html.match('status-success js-branch-status');
-                var isFailure = html.match('status-failure js-branch-status');
+                var isSuccess = html.match('status-success');
+                var isFailure = html.match('status-failure');
                 var isTesting = html.match('Determining merge status');
 
                 // can not determine status on closed issues
