@@ -3,31 +3,39 @@
 // @description    A brief description of your script
 // @author         crudo
 // @include        https://github.com/gooddata/*/pulls
-// @version        1.2
+// @version        1.5
 // ==/UserScript==
 
 var issue_links = document.getElementsByClassName("js-navigation-open");
 var issues_uris = [], issues_parents = [];
+var href;
 for (var i=0; i < issue_links.length; i++) {
-    issues_uris.push(window.location.origin + issue_links[i].getAttribute('href'));
-    issues_parents.push(issue_links[i].parentElement);
+href = issue_links[i].getAttribute('href');
+    if (href.match(/pull\//)){
+        issues_uris.push(window.location.origin + href);
+        issues_parents.push(issue_links[i].parentElement);
+   }
 };
 
 GM_addStyle(
-    ".info-base { font-size: 10px; padding: 1px 3px; position: relative; top: 8px; font-weight: bold; color: white; float: left; margin-right: 7px; border-radius: 3px; } "+
+    ".info-base { padding: 0px 5px; color: white; margin-right: 7px; border-radius: 3px; } "+
     ".info-status-success { color: #090; font-size: 15px; }"+
     ".info-status-error { background: #a10; }"+
     ".info-status-unknow { background: #fc3; color: black; }"+
-    ".info-branch { color: #666; font-weight: normal; }"+
-    ".info-pullId { color: #e5e5e5; font-weight: normal; right: 10px; font-size: 26px; position: absolute; }");
+    ".info-branch { color: #333; }"+
+    ".info-pullId { color: #333; background: #ddd; }"+
+    ".info-unassigned { color: #000; text-transform: uppercase; font-weight: bold; }"+
+    ".info-assignee { color: #000; }");
 
-var s = '<span class="info-base ';
+var s = '<li class="info-base ';
 
-var statusOK     = s + 'info-status-success mini-icon mini-icon-confirm"></span>';
-var statusFAIL   = s + 'info-status-error">FAIL</span>';
-var statusTEST   = s + 'info-status-unknow">???</span>';
+var statusOK     = s + 'info-status-success mini-icon mini-icon-confirm"></li>';
+var statusFAIL   = s + 'info-status-error">FAIL</li>';
+var statusTEST   = s + 'info-status-unknow">???</li>';
 var branch_start = s + 'info-branch">';
 var pull_id      = s + 'info-pullId">';
+var assignee     = s + 'info-assignee mini-icon mini-icon-octocat">';
+var unassigned   = s + 'info-unassigned">';
 
 for (var i=0; i < issues_uris.length; i++) {
     var uri = issues_uris[i];
@@ -37,6 +45,7 @@ for (var i=0; i < issues_uris.length; i++) {
             method: "GET",
             url: urn,
             onload: function(response) {
+
                 var html = response.responseText;
                 var buffer = "";
 
@@ -50,9 +59,6 @@ for (var i=0; i < issues_uris.length; i++) {
                 var userName = userAnchs && userAnchs[0] && userAnchs[0].href.match(/\.com\/(.+)/)[1];
                 var pullItemNode = node.parentElement;
 
-                if (!assigneeName) pullItemNode.style.backgroundColor="rgba(255, 0, 0, 0.05)";
-                if (assigneeName == userName) pullItemNode.style.backgroundColor="rgba(0, 255, 0, 0.1)";
-
                 var isClosed  = html.match('state-indicator closed');
                 var isSuccess = html.match('status-success js-branch-status');
                 var isFailure = html.match('status-failure js-branch-status');
@@ -64,20 +70,23 @@ for (var i=0; i < issues_uris.length; i++) {
                 var targetMaster = html.match(/git checkout (master)/);
                 var targetStable = html.match(/git checkout (stable-\d+)/);
 
-                if (targetMaster !== null) buffer += branch_start + 'master</span>';
-                if (targetStable !== null) buffer += branch_start + targetStable[1] + '</span>';
+                if (targetMaster !== null) buffer += branch_start + 'master</li>';
+                if (targetStable !== null) buffer += branch_start + targetStable[1] + '</li>';
 
-                buffer += pull_id + urn.match(/\/(\d+)/)[1] + '</span>';
+                if (!assigneeName) buffer += unassigned + 'unassigned</li>';
+                if (assigneeName == userName) buffer += assignee + '</li>';
 
-                var metaNode = pullItemNode.getElementsByClassName("meta")[0];
-                var span = metaNode.parentElement.insertBefore(document.createElement('SPAN'), metaNode);
+                buffer += pull_id + urn.match(/\/(\d+)/)[1] + '</li>';
+
+                var metaNode = pullItemNode.getElementsByClassName("pull-meta")[0];
+                var li = metaNode.insertBefore(document.createElement('li'), metaNode.firstElementChild);
 
                 if (isTesting) {
-                    span.outerHTML = statusTEST;
+                    li.outerHTML = statusTEST;
                     return;
                 }
 
-                span.outerHTML = (isFailure !== null ? statusFAIL : statusOK) + buffer;
+                li.outerHTML = (isFailure !== null ? statusFAIL : statusOK) + buffer;
           }
         });
     }(uri, parentNode));
