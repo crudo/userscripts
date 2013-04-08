@@ -3,7 +3,7 @@
 // @description    A brief description of your script
 // @author         crudo
 // @include        https://github.com/gooddata/*/pulls
-// @version        1.6
+// @version        1.7
 // ==/UserScript==
 
 var issue_links = document.getElementsByClassName("js-navigation-open");
@@ -78,7 +78,7 @@ for (var i=0; i < issues_uris.length; i++) {
 
                 buffer += pull_id + urn.match(/\/(\d+)/)[1] + '</li>';
 
-                var metaNode = pullItemNode.getElementsByClassName("pull-meta")[0];
+                var metaNode = pullItemNode.getElementsByClassName("list-group-item-meta")[0];
                 var li = metaNode.insertBefore(document.createElement('li'), metaNode.firstElementChild);
 
                 if (isTesting) {
