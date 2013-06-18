@@ -3,7 +3,7 @@
 // @description    A brief description of your script
 // @author         crudo
 // @include        https://github.com/gooddata/*/pulls
-// @version        1.7
+// @version        1.6
 // ==/UserScript==
 
 var issue_links = document.getElementsByClassName("js-navigation-open");
@@ -24,17 +24,17 @@ GM_addStyle(
     ".info-status-unknow { background: #fc3; color: black; }"+
     ".info-branch { color: #333; }"+
     ".info-pullId { color: #333; background: #ddd; }"+
-    ".info-unassigned { color: #000; text-transform: uppercase; font-weight: bold; }"+
+    ".info-unassigned { color: #fff; background: rgba(255,0,0,0.5); text-transform: uppercase; font-weight: bold; }"+
     ".info-assignee { color: #000; }");
 
 var s = '<li class="info-base ';
 
-var statusOK     = s + 'info-status-success mini-icon mini-icon-confirm"></li>';
+var statusOK     = s + 'info-status-success octicon octicon-check"></li>';
 var statusFAIL   = s + 'info-status-error">FAIL</li>';
 var statusTEST   = s + 'info-status-unknow">???</li>';
 var branch_start = s + 'info-branch">';
 var pull_id      = s + 'info-pullId">';
-var assignee     = s + 'info-assignee mini-icon mini-icon-octocat">';
+var assignee     = s + 'info-assignee octicon octicon-person">';
 var unassigned   = s + 'info-unassigned">';
 
 for (var i=0; i < issues_uris.length; i++) {
@@ -76,17 +76,17 @@ for (var i=0; i < issues_uris.length; i++) {
                 if (!assigneeName) buffer += unassigned + 'unassigned</li>';
                 if (assigneeName == userName) buffer += assignee + '</li>';
 
-                buffer += pull_id + urn.match(/\/(\d+)/)[1] + '</li>';
+//                buffer += pull_id + urn.match(/\/(\d+)/)[1] + '</li>';
 
                 var metaNode = pullItemNode.getElementsByClassName("list-group-item-meta")[0];
-                var li = metaNode.insertBefore(document.createElement('li'), metaNode.firstElementChild);
+                var ul = metaNode.insertBefore(document.createElement('ul'), metaNode.firstElementChild);
 
                 if (isTesting) {
-                    li.outerHTML = statusTEST;
+                    ul.outerHTML = statusTEST;
                     return;
                 }
 
-                li.outerHTML = (isFailure !== null ? statusFAIL : statusOK) + buffer;
+                ul.outerHTML = (isFailure !== null ? statusFAIL : statusOK) + buffer;
           }
         });
     }(uri, parentNode));
